@@ -9,6 +9,7 @@ public sealed class ReservationService(
     IRoomRepository rooms,
     TimeProvider timeProvider)
 {
+    /// <summary>Gets reservations for a room, optionally filtered by an overlapping time range.</summary>
     public async Task<IReadOnlyList<ReservationResponse>> GetForRoomAsync(
         Guid roomId,
         DateTimeOffset? start = null,
@@ -26,6 +27,7 @@ public sealed class ReservationService(
         return items.Select(ToResponse).ToArray();
     }
 
+    /// <summary>Validates and creates a reservation if the room has no conflicting booking.</summary>
     public async Task<ReservationResponse> CreateAsync(
         CreateReservationRequest request,
         CancellationToken cancellationToken = default)

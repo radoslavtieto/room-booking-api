@@ -5,6 +5,7 @@ namespace RoomReservations.Application.Rooms;
 
 public sealed class RoomService(IRoomRepository rooms, IReservationRepository reservations)
 {
+    /// <summary>Gets rooms that are available, optionally within a requested time range.</summary>
     public async Task<IReadOnlyList<RoomResponse>> GetAvailableAsync(
         DateTimeOffset? start = null,
         DateTimeOffset? end = null,
