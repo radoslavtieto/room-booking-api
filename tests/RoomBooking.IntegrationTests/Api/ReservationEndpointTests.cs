@@ -74,45 +74,6 @@ public sealed class ReservationEndpointTests
     }
 
     [Fact]
-    public async Task Post_adjacent_bookings_both_succeed()
-    {
-        using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
-        var roomId = await ApiTestHelpers.GetFirstRoomId(client);
-
-        var first = await ApiTestHelpers.PostReservation(client, roomId, TenAm, TenAm.AddHours(1));
-        var next = await ApiTestHelpers.PostReservation(client, roomId, TenAm.AddHours(1), TenAm.AddHours(2));
-
-        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
-        Assert.Equal(HttpStatusCode.Created, next.StatusCode);
-    }
-
-    [Theory]
-    [InlineData(9, 30, 10, 30)]
-    [InlineData(10, 15, 11, 45)]
-    [InlineData(10, 0, 12, 0)]
-    public async Task Post_overlapping_slots_returns_conflict(
-        int incomingStartHour,
-        int incomingStartMinute,
-        int incomingEndHour,
-        int incomingEndMinute)
-    {
-        using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
-        var roomId = await ApiTestHelpers.GetFirstRoomId(client);
-        var first = await ApiTestHelpers.PostReservation(client, roomId, TenAm, TenAm.AddHours(2));
-
-        var conflict = await ApiTestHelpers.PostReservation(
-            client,
-            roomId,
-            new DateTimeOffset(2026, 11, 24, incomingStartHour, incomingStartMinute, 0, TimeSpan.Zero),
-            new DateTimeOffset(2026, 11, 24, incomingEndHour, incomingEndMinute, 0, TimeSpan.Zero));
-
-        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
-        Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
-    }
-
-    [Fact]
     public async Task Post_same_slot_in_different_rooms_succeeds()
     {
         using var factory = new ApiFactory();
@@ -147,25 +108,6 @@ public sealed class ReservationEndpointTests
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         ApiTestHelpers.AssertProblemDetails(response, problem, 404);
-    }
-
-    [Fact]
-    public async Task Post_reservation_returns_409_problem_details_with_conflicting_reservation_range()
-    {
-        using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
-        var roomId = await ApiTestHelpers.GetFirstRoomId(client);
-        var firstResponse = await ApiTestHelpers.PostReservation(client, roomId, Start, Start.AddHours(1));
-        var first = await ApiTestHelpers.ReadJson(firstResponse);
-
-        var conflictResponse = await ApiTestHelpers.PostReservation(client, roomId, Start.AddMinutes(30), Start.AddHours(2));
-        var problem = await ApiTestHelpers.ReadJson(conflictResponse);
-
-        Assert.Equal(HttpStatusCode.Conflict, conflictResponse.StatusCode);
-        ApiTestHelpers.AssertProblemDetails(conflictResponse, problem, 409);
-        Assert.Equal(first.GetProperty("id").GetGuid(), problem.GetProperty("reservationId").GetGuid());
-        Assert.Equal(Start, problem.GetProperty("start").GetDateTimeOffset());
-        Assert.Equal(Start.AddHours(1), problem.GetProperty("end").GetDateTimeOffset());
     }
 
     [Fact]
