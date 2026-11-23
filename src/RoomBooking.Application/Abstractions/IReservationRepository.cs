@@ -9,5 +9,5 @@ public interface IReservationRepository
     Task<IReadOnlyList<Reservation>> GetByRoomIdAsync(Guid roomId, CancellationToken cancellationToken = default);
     Task<bool> HasOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Reservation>> GetOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default);
-    Task<bool> TryAddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default);
+    Task<Reservation?> AddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default);
 }

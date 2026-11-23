@@ -30,19 +30,23 @@ public sealed class ReservationRepository(AppDbContext dbContext) : IReservation
             .OrderBy(reservation => reservation.Start)
             .ToListAsync(cancellationToken);
 
-    public async Task<bool> TryAddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default)
+    public async Task<Reservation?> AddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
-        if (await HasOverlappingAsync(reservation.RoomId, reservation.Range, cancellationToken))
+        var conflict = await dbContext.Reservations.FirstOrDefaultAsync(
+            existing => existing.RoomId == reservation.RoomId &&
+                existing.Start < reservation.End && existing.End > reservation.Start,
+            cancellationToken);
+        if (conflict is not null)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return false;
+            return conflict;
         }
 
         dbContext.Reservations.Add(reservation);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return true;
+        return null;
     }
 }

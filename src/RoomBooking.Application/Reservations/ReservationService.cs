@@ -35,8 +35,13 @@ public sealed class ReservationService(
             throw new NotFoundException($"Room '{request.RoomId}' was not found.");
 
         var reservation = Reservation.Create(request.RoomId, range, request.Title, timeProvider);
-        if (!await reservations.TryAddIfNoOverlapAsync(reservation, cancellationToken))
-            throw new ConflictException("The room is already reserved for this time range.");
+        var conflict = await reservations.AddIfNoOverlapAsync(reservation, cancellationToken);
+        if (conflict is not null)
+            throw new ConflictException(
+                "The room is already reserved for this time range.",
+                conflict.Id,
+                conflict.Range.Start,
+                conflict.Range.End);
 
         return ToResponse(reservation);
     }

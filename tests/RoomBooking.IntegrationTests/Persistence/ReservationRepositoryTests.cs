@@ -47,15 +47,17 @@ public sealed class ReservationRepositoryTests : IAsyncLifetime
             "Planning",
             new FixedTimeProvider(start));
 
-        Assert.True(await reservationRepository.TryAddIfNoOverlapAsync(reservation));
+        Assert.Null(await reservationRepository.AddIfNoOverlapAsync(reservation));
         Assert.True(await reservationRepository.HasOverlappingAsync(
             room.Id,
             TimeRange.Create(start.AddMinutes(30), start.AddHours(2))));
-        Assert.False(await reservationRepository.TryAddIfNoOverlapAsync(Reservation.Create(
+        var conflict = await reservationRepository.AddIfNoOverlapAsync(Reservation.Create(
             room.Id,
             TimeRange.Create(start.AddMinutes(30), start.AddHours(2)),
             "Conflicting",
-            new FixedTimeProvider(start))));
+            new FixedTimeProvider(start)));
+        Assert.NotNull(conflict);
+        Assert.Equal(reservation.Id, conflict.Id);
 
         var overlaps = await reservationRepository.GetOverlappingAsync(
             room.Id,

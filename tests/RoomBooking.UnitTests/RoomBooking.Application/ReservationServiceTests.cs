@@ -59,19 +59,23 @@ public class ReservationServiceTests
         Assert.Equal(room.Id, result.RoomId);
         Assert.Equal(Now, result.CreatedAt);
         Assert.Single(repository.Items);
-        Assert.Equal(1, repository.TryAddCalls);
+        Assert.Equal(1, repository.AddCalls);
     }
 
     [Fact]
     public async Task CreateAsync_rejects_overlapping_reservation()
     {
         var room = Room.Create("A", 2);
-        var repository = new FakeRepositories([room], [CreateReservation(room.Id, Now, Now.AddHours(1))]);
+        var existing = CreateReservation(room.Id, Now, Now.AddHours(1));
+        var repository = new FakeRepositories([room], [existing]);
 
-        await Assert.ThrowsAsync<ConflictException>(() =>
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
             Service(repository).CreateAsync(Request(room.Id, Now.AddMinutes(30), Now.AddHours(2))));
 
-        Assert.Equal(1, repository.TryAddCalls);
+        Assert.Equal(existing.Id, conflict.ReservationId);
+        Assert.Equal(existing.Range.Start, conflict.Start);
+        Assert.Equal(existing.Range.End, conflict.End);
+        Assert.Equal(1, repository.AddCalls);
         Assert.Single(repository.Items);
     }
 
@@ -83,7 +87,7 @@ public class ReservationServiceTests
         await Assert.ThrowsAsync<NotFoundException>(() =>
             Service(repository).CreateAsync(Request(Guid.NewGuid(), Now, Now.AddHours(1))));
 
-        Assert.Equal(0, repository.TryAddCalls);
+        Assert.Equal(0, repository.AddCalls);
     }
 
     [Fact]
@@ -95,7 +99,7 @@ public class ReservationServiceTests
         await Assert.ThrowsAsync<ArgumentException>(() =>
             Service(repository).CreateAsync(Request(room.Id, Now, Now)));
 
-        Assert.Equal(0, repository.TryAddCalls);
+        Assert.Equal(0, repository.AddCalls);
     }
 
     private static ReservationService Service(FakeRepositories repository) =>
@@ -116,7 +120,7 @@ public class ReservationServiceTests
     {
         public List<Reservation> Items { get; } = [.. reservations];
         public TimeRange? LastOverlapRange { get; private set; }
-        public int TryAddCalls { get; private set; }
+        public int AddCalls { get; private set; }
 
         Task<Room?> IRoomRepository.GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(rooms.FirstOrDefault(room => room.Id == id));
@@ -142,14 +146,15 @@ public class ReservationServiceTests
                 Items.Where(reservation => reservation.RoomId == roomId && reservation.Range.Overlaps(range)).ToArray());
         }
 
-        public Task<bool> TryAddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default)
+        public Task<Reservation?> AddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default)
         {
-            TryAddCalls++;
-            if (Items.Any(item => item.RoomId == reservation.RoomId && item.Range.Overlaps(reservation.Range)))
-                return Task.FromResult(false);
+            AddCalls++;
+            var conflict = Items.FirstOrDefault(item => item.RoomId == reservation.RoomId && item.Range.Overlaps(reservation.Range));
+            if (conflict is not null)
+                return Task.FromResult<Reservation?>(conflict);
 
             Items.Add(reservation);
-            return Task.FromResult(true);
+            return Task.FromResult<Reservation?>(null);
         }
     }
 }
