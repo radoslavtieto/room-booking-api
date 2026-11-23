@@ -61,11 +61,11 @@ public class RoomServiceTests
         public TimeRange? LastRange { get; private set; }
         public int HasOverlapCalls { get; private set; }
 
-        public Task<RoomReservations.Domain.Entities.Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<RoomReservations.Domain.Entities.Reservation?>(null);
+        public Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult<Reservation?>(null);
 
-        public Task<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>> GetByRoomIdAsync(Guid roomId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>>([]);
+        public Task<IReadOnlyList<Reservation>> GetByRoomIdAsync(Guid roomId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Reservation>>([]);
 
         public Task<bool> HasOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default)
         {
@@ -74,13 +74,13 @@ public class RoomServiceTests
             return Task.FromResult(roomId == OverlappingRoomId);
         }
 
-        public Task<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>> GetOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>>([]);
+        public Task<IReadOnlyList<Reservation>> GetOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Reservation>>([]);
 
-        public Task<RoomReservations.Domain.Entities.Reservation?> AddIfNoOverlapAsync(
-            RoomReservations.Domain.Entities.Reservation reservation,
+        public Task<Reservation?> AddIfNoOverlapAsync(
+            Reservation reservation,
             DateTimeOffset activeCutoff,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<RoomReservations.Domain.Entities.Reservation?>(null);
+            Task.FromResult<Reservation?>(null);
     }
 }
