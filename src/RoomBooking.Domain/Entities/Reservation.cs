@@ -6,7 +6,9 @@ public sealed class Reservation
 {
     public Guid Id { get; private init; }
     public Guid RoomId { get; private init; }
-    public TimeRange Range { get; private init; }
+    public DateTimeOffset Start { get; private init; }
+    public DateTimeOffset End { get; private init; }
+    public TimeRange Range => TimeRange.Create(Start, End);
     public string Title { get; private init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; private init; }
 
@@ -20,7 +22,8 @@ public sealed class Reservation
     {
         Id = id;
         RoomId = roomId;
-        Range = range;
+        Start = range.Start;
+        End = range.End;
         Title = title;
         CreatedAt = createdAt;
     }
