@@ -39,3 +39,7 @@ Errors use `application/problem+json`. A `409 Conflict` response includes the co
 - Reservation ranges are half-open (`[start, end)`), normalized to UTC. Send ISO 8601 timestamps with an offset; examples use `Z` (UTC).
 - “Available” means no reservation overlaps the requested range. Without a range, all rooms are returned. When filtering, both `start` and `end` are required.
 - A reservation conflicts only with an overlapping reservation in the same room. Adjacent bookings are allowed; conflicts return `409`.
+
+## List of things to be done for the API to be Production ready
+
+Please see `PRODUCTION_READINESS.md` file for a full todo list
