@@ -3,6 +3,10 @@
   <ItemGroup>
     <ProjectReference Include="..\RoomBooking.Application\RoomBooking.Application.csproj" />
     <ProjectReference Include="..\RoomBooking.Infrastructure\RoomBooking.Infrastructure.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup>
