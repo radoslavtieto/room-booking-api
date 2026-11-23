@@ -15,7 +15,7 @@ public static class ReservationEndpoints
             ReservationService service,
             CancellationToken cancellationToken) =>
         {
-            var range = RoomEndpoints.ParseRange(start, end);
+            var range = DateRangeQueryParser.Parse(start, end);
             var reservations = await service.GetForRoomAsync(roomId, range?.Start, range?.End, cancellationToken);
             return Results.Ok(reservations);
         });
