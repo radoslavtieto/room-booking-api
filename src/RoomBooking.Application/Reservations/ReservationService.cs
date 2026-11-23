@@ -33,11 +33,15 @@ public sealed class ReservationService(
         CancellationToken cancellationToken = default)
     {
         var range = TimeRangeValidator.Create(request.Start, request.End);
+        var activeCutoff = timeProvider.GetUtcNow();
+        if (range.Start < activeCutoff)
+            throw new ArgumentException("A reservation cannot start in the past.", nameof(request));
+
         if (await rooms.GetByIdAsync(request.RoomId, cancellationToken) is null)
             throw new NotFoundException($"Room '{request.RoomId}' was not found.");
 
         var reservation = Reservation.Create(request.RoomId, range, request.Title, timeProvider);
-        var conflict = await reservations.AddIfNoOverlapAsync(reservation, cancellationToken);
+        var conflict = await reservations.AddIfNoOverlapAsync(reservation, activeCutoff, cancellationToken);
         if (conflict is not null)
             throw new ConflictException(
                 "The room is already reserved for this time range.",

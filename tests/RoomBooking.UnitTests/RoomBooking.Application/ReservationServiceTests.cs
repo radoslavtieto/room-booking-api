@@ -102,6 +102,18 @@ public class ReservationServiceTests
         Assert.Equal(0, repository.AddCalls);
     }
 
+    [Fact]
+    public async Task CreateAsync_rejects_reservation_starting_before_active_cutoff()
+    {
+        var room = Room.Create("A", 2);
+        var repository = new FakeRepositories([room], []);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            Service(repository).CreateAsync(Request(room.Id, Now.AddMinutes(-1), Now.AddHours(1))));
+
+        Assert.Equal(0, repository.AddCalls);
+    }
+
     private static ReservationService Service(FakeRepositories repository) =>
         new(repository, repository, new FixedTimeProvider(Now));
 
@@ -146,7 +158,10 @@ public class ReservationServiceTests
                 Items.Where(reservation => reservation.RoomId == roomId && reservation.Range.Overlaps(range)).ToArray());
         }
 
-        public Task<Reservation?> AddIfNoOverlapAsync(Reservation reservation, CancellationToken cancellationToken = default)
+        public Task<Reservation?> AddIfNoOverlapAsync(
+            Reservation reservation,
+            DateTimeOffset activeCutoff,
+            CancellationToken cancellationToken = default)
         {
             AddCalls++;
             var conflict = Items.FirstOrDefault(item => item.RoomId == reservation.RoomId && item.Range.Overlaps(reservation.Range));

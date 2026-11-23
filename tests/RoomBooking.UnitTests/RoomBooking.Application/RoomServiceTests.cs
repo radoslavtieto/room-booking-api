@@ -77,7 +77,10 @@ public class RoomServiceTests
         public Task<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>> GetOverlappingAsync(Guid roomId, TimeRange range, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<RoomReservations.Domain.Entities.Reservation>>([]);
 
-        public Task<RoomReservations.Domain.Entities.Reservation?> AddIfNoOverlapAsync(RoomReservations.Domain.Entities.Reservation reservation, CancellationToken cancellationToken = default) =>
+        public Task<RoomReservations.Domain.Entities.Reservation?> AddIfNoOverlapAsync(
+            RoomReservations.Domain.Entities.Reservation reservation,
+            DateTimeOffset activeCutoff,
+            CancellationToken cancellationToken = default) =>
             Task.FromResult<RoomReservations.Domain.Entities.Reservation?>(null);
     }
 }
